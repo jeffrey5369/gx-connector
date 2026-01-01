@@ -51,21 +51,25 @@ async def gx_webhook(request: Request):
 
 @app.get("/gx/ping")
 async def gx_ping():
-    """
-    Quick test that your GX Personal Token works (does not change anything).
-    You may need to adjust this endpoint later depending on GX docs,
-    but it’s a safe sanity check.
-    """
     if not GX_PERSONAL_TOKEN:
         raise HTTPException(status_code=500, detail="Missing GX_PERSONAL_TOKEN")
 
-    url = f"{GX_API_BASE}/used/public-api/v1/listings"
     headers = {
         "Accept": "application/json",
         "Authorization": f"Bearer {GX_PERSONAL_TOKEN}",
+        "User-Agent": "gx-connector/1.0",
     }
 
-    async with httpx.AsyncClient(timeout=20) as client:
-        r = await client.get(url, headers=headers)
+    user_url = f"{GX_API_BASE}/used/public-api/v1/user"
+    listings_url = f"{GX_API_BASE}/used/public-api/v1/listings"
 
-    return {"status_code": r.status_code, "ok": (200 <= r.status_code < 300)}
+    async with httpx.AsyncClient(timeout=20) as client:
+        r_user = await client.get(user_url, headers=headers)
+        r_listings = await client.get(listings_url, headers=headers)
+
+    return {
+        "user_status": r_user.status_code,
+        "user_preview": (r_user.text or "")[:200],
+        "listings_status": r_listings.status_code,
+        "listings_preview": (r_listings.text or "")[:200],
+    }
