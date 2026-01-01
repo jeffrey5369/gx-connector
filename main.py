@@ -11,7 +11,16 @@ GX_WEBHOOK_SECRET = os.getenv("GX_WEBHOOK_SECRET", "")  # shared secret GX will 
 @app.get("/health")
 def health():
     return {"ok": True}
-
+@app.get("/debug/env")
+def debug_env():
+    t = os.getenv("GX_PERSONAL_TOKEN", "")
+    return {
+        "GX_API_BASE": os.getenv("GX_API_BASE", ""),
+        "GX_PERSONAL_TOKEN_set": bool(t),
+        "GX_PERSONAL_TOKEN_len": len(t),
+        "GX_PERSONAL_TOKEN_prefix": t[:6],   # only first 6 chars (safe)
+        "GX_WEBHOOK_SECRET_set": bool(os.getenv("GX_WEBHOOK_SECRET", "")),
+    }
 def _check_gx_webhook_auth(request: Request):
     """
     GX webhooks will include: Authorization: Bearer <token_you_set_in_GX>
